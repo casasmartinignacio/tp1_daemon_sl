@@ -1,0 +1,14 @@
+[Unit]
+Description=Daemon service to monitor available screen devices - TP1 Software Libre - Martin Casas - Ivan Arpea
+Documentation=See readme file
+After=network.target
+
+[Service]
+Environment=NODE_PORT=6152
+Type=simple
+User=ivan
+ExecStart=/usr/bin/node /home/ivan/pruebasl/index.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
