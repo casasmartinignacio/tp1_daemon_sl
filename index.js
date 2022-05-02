@@ -1,10 +1,9 @@
-// Daemon realizado por Martin Casas e Ivan Aprea 
+// Daemon realizado por Martin Casas e Ivan Aprea
 // TP1 - SOFTWARE LIBRE - FI UNMDP - 2022
 
 // lib
 const http = require("http");
 const dbus = require("dbus-next");
-const notifier = require("node-notifier");
 const fs = require("fs");
 
 // host config
@@ -14,6 +13,23 @@ const port = process.env.NODE_PORT || 6151;
 const bus = dbus.systemBus();
 
 let obj, colorMngr;
+
+function padTo2Digits(num) {
+  return num.toString().padStart(2, "0");
+}
+
+function formatDate(date) {
+  return `${[
+    padTo2Digits(date.getDate()),
+    padTo2Digits(date.getMonth() + 1),
+    date.getFullYear(),
+  ].join("/")} ${date.getHours()}:${date.getMinutes()}`;
+}
+
+fs.appendFileSync(
+  "/home/ivan/tp1_daemon_sl/log",
+  `[${formatDate(new Date())}] El daemon fue inicializado.\n`
+);
 
 const initialize = async () => {
   obj = await bus.getProxyObject(
@@ -31,11 +47,14 @@ const initialize = async () => {
         properties
           .Get("org.freedesktop.ColorManager.Device", "Model")
           .then((monitorModel) => {
-            fs.writeFileSync("/home/ivan/tp1_daemon_sl/log", monitorModel.value);
-            // notifier.notify({
-            //   title: "Nuevo dispositivo de salida detectado!",
-            //   message: `Se conecto ${monitorModel.value}`,
-            // });
+            fs.appendFileSync(
+              "/home/ivan/tp1_daemon_sl/log",
+              `[${formatDate(
+                new Date()
+              )}] Nuevo dispositivo de salida detectado. Se conecto ${
+                monitorModel.value
+              }\n`
+            );
           });
       });
   });
@@ -56,5 +75,24 @@ const server = http.createServer(async (req, res) => {
 
 initialize();
 server.listen(port, hostname, () => {
-  console.log("Server running at http://" + hostname + ":" + port + "/");
+  fs.appendFileSync(
+    "/home/ivan/tp1_daemon_sl/log",
+    "Server running at http://" + hostname + ":" + port + "/\n"
+  );
+});
+
+process.on("exit", () => {
+  fs.appendFileSync(
+    "/home/ivan/tp1_daemon_sl/log",
+    `[${formatDate(new Date())}] El daemon ha finalizado su ejecución\n`
+  );
+  process.exit(1);
+});
+
+process.on("SIGTERM", () => {
+  fs.appendFileSync(
+    "/home/ivan/tp1_daemon_sl/log",
+    `[${formatDate(new Date())}] El daemon ha finalizado abruptamente\n`
+  );
+  process.exit(1);
 });
