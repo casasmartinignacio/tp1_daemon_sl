@@ -5,10 +5,11 @@
 const http = require("http");
 const dbus = require("dbus-next");
 const notifier = require("node-notifier");
+const fs = require("fs");
 
 // host config
 const hostname = "0.0.0.0";
-const port = process.env.NODE_PORT || 6152;
+const port = process.env.NODE_PORT || 6151;
 
 const bus = dbus.systemBus();
 
@@ -30,10 +31,11 @@ const initialize = async () => {
         properties
           .Get("org.freedesktop.ColorManager.Device", "Model")
           .then((monitorModel) => {
-            notifier.notify({
-              title: "Nuevo monitor detectado!",
-              message: `Se conecto ${monitorModel.value}`,
-            });
+            fs.writeFileSync("/home/ivan/tp1_daemon_sl/log", monitorModel.value);
+            // notifier.notify({
+            //   title: "Nuevo dispositivo de salida detectado!",
+            //   message: `Se conecto ${monitorModel.value}`,
+            // });
           });
       });
   });
